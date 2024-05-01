@@ -1,0 +1,176 @@
+---
+title: "YAMAHA Sales"
+author: "Jillber García"
+date: "15/6/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("dplyr")
+library(dplyr)
+library(car)
+```
+```{r}
+library(smooth)
+library(tseries)
+library(forecast)
+```
+
+```{r}
+library(readr)
+Dataset <- read_csv("~/Jill/Data analyst/Correlation one Data science course/PROJECT/Dataset.csv")
+attach(ventapordia)
+
+ventayfecha <-Dataset %>% group_by(Fecha_Registro_runt,Venta) %>% select(Fecha_Registro_runt,Venta) %>% count(Venta) 
+ventapordia <- ventayfecha %>% group_by(Fecha_Registro_runt) %>% summarise(sum(Venta))
+
+
+Ventasts <- ts(`sum(Venta)`,frequency = 12, start = c(2017,01,02), end = c(2022,05,14))
+fechas1=seq(as.Date("2022/5/14"), length.out = length(Ventasts),by="days")
+ts.plot(`Ventasts`,main="Ventas")
+
+```
+
+```{r}
+
+```
+
+```{r}
+scatterplot(Dataset$Fecha_Registro_runt,Dataset$Venta)
+```
+
+```{r}
+T1=length(Ventasts)
+t <- seq(1:T1)
+t2 <- seq(1:T1)
+x <- seq(1:T1)
+x2<- x^2
+x3<- x^3
+x4<- x^4
+x5<- x^5
+x6<- x^6
+x7<- x^7
+x8<- x^8
+mlineal2= lm(Ventasts~x)
+summary(mlineal2)
+p1<-predict.lm(mlineal2,h=3)
+
+mcuadr= lm(Ventasts~x+x2)
+summary(mcuadr)
+p2<-predict.lm(mcuadr,h=3)
+
+mcubic= lm(Ventasts~x+x2+x3)
+summary(mcubic)
+p3<-predict.lm(mcubic,h=3)
+
+mcuatro= lm(Ventasts~x+x2+x3+x4)
+summary(mcuatro)
+p4<-predict.lm(mcuatro,h=3)
+
+mcinco= lm(Ventasts~x+x2+x3+x4+x5)
+summary(mcinco)
+p5<-predict.lm(mcinco,h=3)
+
+msix= lm(Ventasts~x+x2+x3+x4+x5+x6)
+summary(msix)
+p6<-predict.lm(msix,h=3)
+
+msiete= lm(Ventasts~x+x2+x3+x4+x5+x6+x7)
+summary(msiete)
+p7<-predict.lm(msiete,h=3)
+
+mocho= lm(Ventasts~x+x2+x3+x4+x5+x6+x7+x8)
+summary(mocho)
+p8<-predict.lm(mocho,h=3)
+```
+
+```{r}
+plot(fechas1,Ventasts,type="l",col="blue")
+lines(fechas1,p1,col="green")
+
+lines(fechas1,p5,col="black")
+
+lines(fechas1,p8,col="pink")
+```
+
+```{r}
+#Medidas de error de pron?stico
+rmsep1<-sqrt(MSE(Ventasts,p1))
+rmsep2<-sqrt(MSE(Ventasts,p2))
+rmsep3<-sqrt(MSE(Ventasts,p3))
+rmsep4<-sqrt(MSE(Ventasts,p4))
+rmsep5<-sqrt(MSE(Ventasts,p5))
+rmsep6<-sqrt(MSE(Ventasts,p6))
+rmsep7<-sqrt(MSE(Ventasts,p7))
+rmsep8<-sqrt(MSE(Ventasts,p8))
+
+maep1<-MAE(Ventasts,p1)
+maep2<-MAE(Ventasts,p2)
+maep3<-MAE(Ventasts,p3)
+maep4<-MAE(Ventasts,p4)
+maep5<-MAE(Ventasts,p5)
+maep6<-MAE(Ventasts,p6)
+maep7<-MAE(Ventasts,p7)
+maep8<-MAE(Ventasts,p8)
+
+mapep1<-MAPE(Ventasts,p1)
+mapep2<-MAPE(Ventasts,p2)
+mapep3<-MAPE(Ventasts,p3)
+mapep4<-MAPE(Ventasts,p4)
+mapep5<-MAPE(Ventasts,p5)
+mapep6<-MAPE(Ventasts,p6)
+mapep7<-MAPE(Ventasts,p7)
+mapep8<-MAPE(Ventasts,p8)
+```
+
+```{r}
+rmsep1
+rmsep2
+rmsep3
+rmsep4
+rmsep5
+rmsep6
+rmsep7
+rmsep8
+
+```
+```{r}
+maep1
+maep2
+maep3
+maep4
+maep5
+maep6
+maep7
+maep8
+```
+```{r}
+mapep1
+mapep2
+mapep3
+mapep4
+mapep5
+mapep6
+mapep7
+mapep8
+
+```
+
+```{r}
+#Modelos de suavizamiento
+m1<-sma(Ventasts,h=3,silent="none")# promedios m?viles estacionales
+summary(m1)
+f4<-forecast(m1)
+plot(forecast(m1))
+
+m2<-ces(Ventasts,h=3,seasonality = "s")# suavizamiento exponencial
+summary(m2)
+f5<-forecast(m2)
+plot(forecast(m2))
+
+#Medidas de error de pron?stico
+accuracy(f4)
+accuracy(f5)
+#hacer la serie con nuestros datos
+```

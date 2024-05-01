@@ -1,0 +1,160 @@
+---
+title: "Forecast"
+author: "Jillber García"
+date: "15/6/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages("astsa")
+#install.packages("tidyverse")
+#install.packages("lubridate")
+#install.packages("foreign")
+#install.packages("quantmod")
+#install.packages("dplyr")
+#install.packages("TSA")
+#install.packages("tseries")
+#install.packages("corrgram")
+#install.packages("forecast")
+#install.packages("fGarch")
+#install.packages("timeDate")
+#install.packages("timeSeries")
+#install.packages("fBasics")
+#install.packages("lmtest")
+#install.packages("rugarch")
+#install.packages("vctrs")
+```
+```{r}
+library(smooth)
+library(tseries)
+library(forecast)
+library(readr)
+library(TSA)
+library(tseries)
+library(corrgram)
+library(forecast)
+library(fGarch)
+library(timeDate)
+library(timeSeries)
+library(fBasics)
+library(lmtest)
+library(rugarch)
+library(dplyr)
+library(car)
+library(astsa)
+library(lubridate)
+library(foreign)
+library(quantmod)
+
+```
+```{r}
+
+Dataset <- read_csv("~/Jill/Data analyst/Correlation one Data science course/PROJECT/Clean_Dataset.csv")
+
+
+ventayfecha <-Dataset %>% group_by(Fecha_Registro_runt,Venta) %>% select(Fecha_Registro_runt,Venta) %>% count(Venta) 
+ventapordia <- ventayfecha %>% group_by(Fecha_Registro_runt) %>% summarise(sum(n))
+attach(ventapordia)
+#Crear la serie de tiempo
+Ventasts <- ts(`sum(n)`,frequency = 12, start = c(2017,01,02), end = c(2022,05,14))
+fechas1=seq(as.Date("2022/5/14"), length.out = length(Ventasts),by="days")
+
+#Gráfica de la serie
+ts.plot(`Ventasts`,main="Motorcycles sales Jan 2017 – May 2022",type="o",lty="dashed",col="red", ylab = "Sales")
+
+```
+```{r}
+#Analizando estacionalidad
+seasonplot(Ventasts,col=rainbow(12),year.labels = TRUE,main="YAMAHA Sales Stationarity")
+```
+
+```{r}
+#Transformar la serie usualmente se usa la diferencia logarítmica que es el logaritmo de la variación porcentual 
+varporcentual<-diff(log(Ventasts))
+
+#Gráfica del logaritmo de la variación porcentual
+ts.plot(`varporcentual`, main="Serie trasnsformada log varporcentual",type="o",lty="dashed",col="red")
+
+```
+
+
+```{r}
+#Funciones de autocorrelación
+par(mfrow=c(1,1))
+
+
+acf(ts(Ventasts, frequency=1) ,main="1") #nos dice el número de medias móviles
+pacf(ts(Ventasts,frequency=1),main="2") #nos dice el número de autoregresivos
+
+acf(ts(varporcentual,frequency=1),main="Differenced series autocorrelation function")
+pacf(ts(varporcentual, frequency=1),main="Differenced series partial autocorrelation function")
+#P valor menor al alfa del 5% lo cual indica que ambas series son estacionarias
+```
+```{r}
+#Prueba de Dickey Fuller aumentada para comprobar estacionalidad
+adf.test(Ventasts)
+adf.test(varporcentual)
+#p valor inferior al alfa del 5% se rechaza hipótesis nula entonces ambas series son estacionales
+```
+
+```{r}
+#Validación de Supuestos
+modelo1 = Arima(Ventasts,order=c(2,1,2)) #creamos el modelo 
+modelo1
+
+tsdiag(modelo1)#gráficamente se cumplen las condiciones rido blanco
+
+Box.test(residuals(modelo1),type="Ljung-Box")#el p valor me da mayor al alfa del 0.05 entonces cumplo las condiciones rido blanco
+
+error=residuals(modelo1)
+plot(error,ylab='Residuals')#Se comprueba que los errores se distribuyen normal
+```
+```{r}
+#Pronóstico del modelo 
+pronostico <- forecast::forecast(modelo1, h=6)
+pronostico
+plot(pronostico)
+```
+
+```{r}
+modelo2 = Arima(Ventasts,order=c(3,1,5)) #creamos el modelo 
+modelo2
+pronostico2 <- forecast::forecast(modelo2, h=6)
+pronostico2
+plot(pronostico2)
+
+```
+
+```{r}
+modelo3 = Arima(Ventasts,order=c(2,1,2)) #creamos el modelo 
+modelo3
+pronostico3 <- forecast::forecast(modelo3, h=6)
+pronostico3
+plot(pronostico3)
+
+```
+```{r}
+modelo4 = Arima(Ventasts,order=c(6,1,4)) #creamos el modelo 
+modelo4
+pronostico4 <- forecast::forecast(modelo4, h=6)
+pronostico4
+plot(pronostico4)
+
+```
+
+```{r}
+modelo5 = Arima(Ventasts,order=c(6,1,5)) #creamos el modelo 
+modelo5
+pronostico5 <- forecast::forecast(modelo5, h=6)
+pronostico5
+plot(pronostico5)
+
+```
+
+
+
+
